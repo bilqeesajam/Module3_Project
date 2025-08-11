@@ -5,6 +5,9 @@ import LearnersView from '@/views/LearnersView.vue'
 import SignupView from '@/views/SignupView.vue'
 import HomeView from '@/views/HomeView.vue'
 import UsersComp from '@/components/UsersComp.vue'
+import HomeView2 from '@/views/HomeView2.vue'
+import CoursesView from '@/views/CoursesView.vue'
+import PriceListView from '@/views/PriceListView.vue'
 
 const routes = [
   {
@@ -46,6 +49,21 @@ const routes = [
     path: '/users',
     name: 'users',
     component: UsersComp
+  },
+  {
+    path: '/homeTwo',
+    name: 'homeTwo',
+    component: HomeView2
+  },
+  {
+    path: '/courses',
+    name: 'courses',
+    component: CoursesView
+  },
+  {
+    path: '/pricelist',
+    name: 'pricelist',
+    component: PriceListView
   }
 ]
 

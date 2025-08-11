@@ -1,6 +1,8 @@
 <template>
-  <Sidebar v-if="showSidebar && showSidebar2 && showSidebar3"/>
-  <router-view/>
+  <Sidebar v-if="showSidebar && showSidebar2 && showSidebar3 && showSidebar4"/>
+  <div class="main-content">
+    <router-view />
+  </div>
 </template>
 <script>
 import Sidebar from "./components/Sidebar.vue";
@@ -17,11 +19,13 @@ export default {
     const showSidebar = computed(() => route.name !== "login");
     const showSidebar2 = computed(() => route.name !== "learners");
     const showSidebar3 = computed(() => route.name !== "forgot");
+    const showSidebar4 = computed(() => route.name !== "signup");
 
     return {
       showSidebar,
       showSidebar2,
-      showSidebar3
+      showSidebar3,
+      showSidebar4
     };
   },
   mounted() {
@@ -35,24 +39,11 @@ export default {
 }; 
 </script>
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+body {
+  background-color: #112B4A; /* Match card navy */
 }
-
-nav {
-  padding: 30px;
-}
-
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-nav a.router-link-exact-active {
-  color: #42b983;
+.main-content {
+  margin-left: 210px;
+  padding: 2rem 1rem;
 }
 </style>
