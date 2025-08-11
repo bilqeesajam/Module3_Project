@@ -24,8 +24,7 @@ app.use(cors());
 app.use(express.json());
 
 app.post('/password-verification', async (req, res) => {
-  const { username, password, role } = req.body;  // role is "admin" or "learner"
-
+  const { username, password, role } = req.body;
   const result = await verifyPassword(username, password, role);
 
   if (result.success) {

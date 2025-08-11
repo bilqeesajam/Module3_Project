@@ -67,7 +67,6 @@ export default {
             throw new Error(data.error || 'Signup failed');
           }
           alert('Signup successful!');
-          // Optional: Reset form or redirect
           this.username = '';
           this.email = '';
           this.phone_number = '';
