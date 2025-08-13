@@ -1,6 +1,7 @@
 <template>
   <div class="container py-4">
     <h1 class="text-center mb-2" style="color: #205781; font-weight: 700;">Hello Admin</h1>
+
     <!-- Stats Cards -->
     <div class="row mb-5">
       <div class="col-md-3" v-for="stat in stats" :key="stat.title">
@@ -43,99 +44,83 @@
 
 <script setup>
 import { onMounted, ref } from "vue";
+import axios from "axios";
 import Chart from "chart.js/auto";
 
-const stats = ref([
-  { title: "Active Students", value: 120 },
-  { title: "Total Orders", value: 85 },
-  { title: "Completed Orders", value: 60 },
-  { title: "Total Revenue (ZAR)", value: "R 250,000" },
-]);
+const stats = ref([]);
 
-onMounted(() => {
-  // Enrollment over time (dummy)
-  new Chart(document.getElementById("enrollmentsChart"), {
-    type: "line",
-    data: {
-      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
-      datasets: [
-        {
+onMounted(async () => {
+  try {
+    // 1️⃣ Fetch stats
+    const statsRes = await axios.get("http://localhost:9090/dashboard/stats");
+    stats.value = [
+      { title: "Active Students", value: statsRes.data.activeStudents },
+      { title: "Total Orders", value: statsRes.data.totalOrders },
+      { title: "Completed Orders", value: statsRes.data.completedOrders },
+      { title: "Total Revenue (ZAR)", value: `R ${Number(statsRes.data.totalRevenue).toLocaleString()}` }
+    ];
+
+    // 2️⃣ Fetch charts
+    const enrollmentsRes = await axios.get("http://localhost:9090/dashboard/enrollments-over-time");
+    new Chart(document.getElementById("enrollmentsChart"), {
+      type: "line",
+      data: {
+        labels: enrollmentsRes.data.map(row => row.month),
+        datasets: [{
           label: "Enrollments",
-          data: [12, 19, 14, 20, 22, 30, 25],
+          data: enrollmentsRes.data.map(row => row.count),
           borderColor: "#FF851B",
           backgroundColor: "rgba(255, 133, 27, 0.2)",
           fill: true,
-          tension: 0.4,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: { beginAtZero: true },
+          tension: 0.4
+        }]
       },
-    },
-  });
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
 
-  // Orders status distribution (dummy)
-  new Chart(document.getElementById("ordersStatusChart"), {
-    type: "pie",
-    data: {
-      labels: ["Pending", "In Progress", "Completed"],
-      datasets: [
-        {
-          data: [15, 20, 50],
-          backgroundColor: ["#FF851B", "#001F3F", "#FFA65C"],
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-    },
-  });
+    const ordersStatusRes = await axios.get("http://localhost:9090/dashboard/orders-status");
+    new Chart(document.getElementById("ordersStatusChart"), {
+      type: "pie",
+      data: {
+        labels: ordersStatusRes.data.map(row => row.status),
+        datasets: [{
+          data: ordersStatusRes.data.map(row => row.count),
+          backgroundColor: ["#FF851B", "#001F3F", "#FFA65C"]
+        }]
+      }
+    });
 
-  // Revenue by package type (dummy)
-  new Chart(document.getElementById("revenueChart"), {
-    type: "bar",
-    data: {
-      labels: ["Starter", "Business", "E-commerce"],
-      datasets: [
-        {
+    const revenueRes = await axios.get("http://localhost:9090/dashboard/revenue-by-package");
+    new Chart(document.getElementById("revenueChart"), {
+      type: "bar",
+      data: {
+        labels: revenueRes.data.map(row => row.package_type),
+        datasets: [{
           label: "Revenue (ZAR)",
-          data: [35000, 85000, 130000],
-          backgroundColor: "#FF851B",
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: { beginAtZero: true },
+          data: revenueRes.data.map(row => row.total_revenue),
+          backgroundColor: "#FF851B"
+        }]
       },
-    },
-  });
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
 
-  // Top 5 courses by enrollment (dummy)
-  new Chart(document.getElementById("topCoursesChart"), {
-    type: "bar",
-    data: {
-      labels: ["JavaScript", "HTML", "CSS", "Vue.js", "Node.js"],
-      datasets: [
-        {
+    const topCoursesRes = await axios.get("http://localhost:9090/dashboard/top-courses");
+    new Chart(document.getElementById("topCoursesChart"), {
+      type: "bar",
+      data: {
+        labels: topCoursesRes.data.map(row => row.title),
+        datasets: [{
           label: "Enrollments",
-          data: [45, 40, 38, 32, 25],
-          backgroundColor: "#001F3F",
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      indexAxis: "y",
-      scales: {
-        x: { beginAtZero: true },
+          data: topCoursesRes.data.map(row => row.enrollment_count),
+          backgroundColor: "#001F3F"
+        }]
       },
-    },
-  });
+      options: { responsive: true, indexAxis: "y", scales: { x: { beginAtZero: true } } }
+    });
+
+  } catch (error) {
+    console.error("Error loading dashboard:", error);
+  }
 });
 </script>
 

@@ -18,18 +18,19 @@ export async function verifyPassword(username, plainPassword, loginType) {
     );
 
     if (rows.length === 0) {
-      return { success: false, message: 'User not found.' };
+      return { success: false, message: 'Invalid credentials.' };
     }
 
     const { password: hashedPass, role } = rows[0];
 
+    // Strict role checking
     if (loginType === 'admin') {
       if (role !== 'admin') {
         return { success: false, message: 'Access denied: Admins only.' };
       }
     } else if (loginType === 'learner') {
       if (!['student', 'consumer'].includes(role)) {
-        return { success: false, message: 'Access denied: Not a learner.' };
+        return { success: false, message: 'Access denied: Learners only.' };
       }
     } else {
       return { success: false, message: 'Invalid login type.' };
@@ -38,7 +39,7 @@ export async function verifyPassword(username, plainPassword, loginType) {
     const match = await bcrypt.compare(plainPassword, hashedPass);
 
     if (!match) {
-      return { success: false, message: 'Password is incorrect.' };
+      return { success: false, message: 'Invalid credentials.' };
     }
 
     return { success: true, message: 'Login successful.', role };

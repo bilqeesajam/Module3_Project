@@ -7,6 +7,7 @@
       <li><router-link to="/courses">Learn how to code</router-link></li>
       <li><router-link to="/pricelist">Packages we offer </router-link></li>
       <li><router-link to="/users">Our Customers</router-link></li>
+      <li><router-link to="/profile">My Profile</router-link></li>
     </ul>
   </nav>
 </template>
