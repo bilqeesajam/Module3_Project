@@ -5,6 +5,7 @@ import mysql2 from 'mysql2/promise';
 import { HashingPass } from './hashed.js';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
+import * as coursesController from './controllers/coursesController.js';
 
 dotenv.config();
 const app = express();
@@ -241,6 +242,93 @@ app.post('/forgot-password', async (req, res) => {
     res.status(500).json({ message: 'Server error.' });
   }
 });
+
+// Get user profile
+app.get('/user/profile', async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Fetch user data
+    const [user] = await pool.query(`
+      SELECT 
+        user_id, username, email_address, 
+        phone_number, role, created_at
+      FROM users 
+      WHERE username = ?`,
+      [decoded.username]
+    );
+
+    if (user.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userId = user[0].user_id;
+
+    // Fetch enrollments with course titles
+    const [enrollments] = await pool.query(`
+      SELECT 
+        e.enrollment_id, c.title, 
+        e.progress, e.status, e.enrolled_at
+      FROM enrollments e
+      JOIN courses c ON e.course_id = c.course_id
+      WHERE e.user_id = ?`,
+      [userId]
+    );
+
+    // Fetch recent orders (last 5)
+    const [orders] = await pool.query(`
+      SELECT 
+        order_id, package_type, 
+        status, price, created_at
+      FROM orders 
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+      LIMIT 5`,
+      [userId]
+    );
+
+    // Fetch payment history
+    const [payments] = await pool.query(`
+      SELECT 
+        payment_id, amount_paid, 
+        payment_method, status, created_at
+      FROM payments
+      WHERE user_id = ?
+      ORDER BY created_at DESC`,
+      [userId]
+    );
+
+    res.json({
+      user: user[0],
+      enrollments,
+      orders,
+      payments
+    });
+
+  } catch (err) {
+    console.error('Profile error:', err);
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+app.get('/courses', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM courses');
+    res.json(rows);
+  } catch (err) {
+    console.error('Error fetching courses:', err);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+app.get('/courses', coursesController.getCourses);
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);

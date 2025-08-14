@@ -8,6 +8,7 @@
 import Sidebar from "./components/Sidebar.vue";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
+import 'toastify-js/src/toastify.css';
 
 export default {
   components: {
@@ -44,6 +45,5 @@ body {
 }
 .main-content {
   margin-left: 210px;
-  padding: 2rem 1rem;
 }
 </style>

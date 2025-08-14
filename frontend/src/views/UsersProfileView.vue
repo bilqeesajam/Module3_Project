@@ -1,6 +1,6 @@
 <template>
   <div class="profile-container">
-    <div class="profile-card" v-if="!loading">
+    <div class="profile-card" v-if="!loading && user">
       <div class="profile-header">
         <img 
           class="profile-avatar" 
@@ -16,14 +16,14 @@
         <ul>
           <li><strong>Email:</strong> {{ user.email_address }}</li>
           <li><strong>Phone:</strong> {{ user.phone_number }}</li>
-          <li><strong>Joined:</strong> {{ formatDate(user.created_at) }}</li>
+          <li><strong>Member Since:</strong> {{ formatDate(user.created_at) }}</li>
         </ul>
 
         <h4>Enrolled Courses</h4>
         <ul v-if="enrollments.length">
-          <li v-for="enrollment in enrollments" :key="enrollment.course_id">
+          <li v-for="enrollment in enrollments" :key="enrollment.enrollment_id">
             {{ enrollment.title }} - 
-            <span :class="enrollment.status">{{ enrollment.status }}</span>
+            <span :class="enrollment.status.toLowerCase()">{{ enrollment.status }}</span>
             <span>({{ enrollment.progress }}% complete)</span>
           </li>
         </ul>
@@ -33,62 +33,86 @@
         <ul v-if="orders.length">
           <li v-for="order in orders" :key="order.order_id">
             {{ order.package_type }} package - 
-            <span :class="order.status">{{ order.status }}</span> 
+            <span :class="order.status.toLowerCase().replace(' ', '-')">{{ order.status }}</span> 
             (R{{ order.price }})
           </li>
         </ul>
         <p v-else class="empty-text">No orders yet</p>
 
-        <router-link to="/editprofile" class="edit-btn">Edit Profile</router-link>
+        <h4 v-if="payments.length">Payment History</h4>
+        <ul v-if="payments.length">
+          <li v-for="payment in payments" :key="payment.payment_id">
+            R{{ payment.amount_paid }} via {{ payment.payment_method }} 
+            <span :class="payment.status">{{ payment.status }}</span>
+          </li>
+        </ul>
       </div>
     </div>
 
-    <div v-else class="loading-text">Loading profile...</div>
+    <div v-if="loading" class="loading-text">Loading profile...</div>
+    <div v-if="error" class="error-text">{{ error }}</div>
   </div>
 </template>
 
-<script setup>
+<script>
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 
-const user = ref({});
-const enrollments = ref([]);
-const orders = ref([]);
-const loading = ref(true);
+export default {
+  setup() {
+    const user = ref(null);
+    const enrollments = ref([]);
+    const orders = ref([]);
+    const payments = ref([]);
+    const loading = ref(true);
+    const error = ref(null);
+    const router = useRouter();
 
-// TEMP: test data (replace with API call later)
-async function fetchProfile() {
-  loading.value = true;
-  await new Promise(resolve => setTimeout(resolve, 500)); // fake delay
+    const fetchProfile = async () => {
+      try {
+        loading.value = true;
+        const token = localStorage.getItem('token');
 
-  user.value = {
-    user_id: 2,
-    username: "sarah_m",
-    email_address: "sarah.meyer@gmail.com",
-    phone_number: "0710000002",
-    role: "student",
-    created_at: "2025-07-02"
-  };
+        if (!token) {
+          router.push('/login');
+          return;
+        }
 
-  enrollments.value = [
-    { course_id: 1, title: "HTML", progress: 25.0, status: "active" },
-    { course_id: 4, title: "Node.js and Express", progress: 0.0, status: "active" },
-    { course_id: 7, title: "MySQL and APIs", progress: 10.0, status: "active" },
-    { course_id: 3, title: "JavaScript", progress: 20.0, status: "active" }
-  ];
+        const response = await fetch('http://localhost:9090/user/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
-  orders.value = [
-    { order_id: 1, package_type: "starter", status: "pending", price: 1500.00 },
-    { order_id: 2, package_type: "business", status: "in progress", price: 5000.00 }
-  ];
+        if (!response.ok) throw new Error('Failed to fetch profile data');
+        
+        const data = await response.json();
+        user.value = data.user;
+        enrollments.value = data.enrollments;
+        orders.value = data.orders;
+        payments.value = data.payments;
 
-  loading.value = false;
-}
+      } catch (err) {
+        error.value = err.message;
+        console.error('Profile fetch error:', err);
+      } finally {
+        loading.value = false;
+      }
+    };
 
-function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString();
-}
+    const formatDate = (dateStr) => {
+      return new Date(dateStr).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    };
 
-onMounted(fetchProfile);
+    onMounted(fetchProfile);
+
+    return { user, enrollments, orders, payments, loading, error, formatDate };
+  }
+};
 </script>
 
 <style scoped>
@@ -184,4 +208,9 @@ onMounted(fetchProfile);
   background: #205781;
   color: #fff;
 }
+.completed { color: #28a745; }
+.pending { color: #ffc107; }
+.in-progress { color: #17a2b8; }
+.active { color: #007bff; }
+.failed { color: #dc3545; }
 </style>

@@ -8,6 +8,7 @@ import UsersComp from '@/components/UsersComp.vue'
 import HomeView2 from '@/views/HomeView2.vue'
 import CoursesView from '@/views/CoursesView.vue'
 import PriceListView from '@/views/PriceListView.vue'
+import UsersProfileView from '@/views/UsersProfileView.vue'
 
 const routes = [
   {
@@ -64,6 +65,11 @@ const routes = [
     path: '/pricelist',
     name: 'pricelist',
     component: PriceListView
+  },
+  {
+    path: '/profile',
+    name: 'profile',
+    component: UsersProfileView
   }
 ]
 
@@ -71,5 +77,26 @@ const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes
 })
+
+// router.js
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token');
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const requiredRole = to.meta.role;
+
+  if (requiresAuth && !token) {
+    next('/login');
+  } else if (requiresAuth && token) {
+    // Decode token to check role
+    const decoded = jwtDecode(token);
+    if (requiredRole && decoded.role !== requiredRole) {
+      next('/unauthorized');
+    } else {
+      next();
+    }
+  } else {
+    next();
+  }
+});
 
 export default router

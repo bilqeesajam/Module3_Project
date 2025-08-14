@@ -23,7 +23,7 @@
       <div class="feature-card">
         <h2>View Your Profile</h2>
         <p>Manage your personal information, track your course progress, and update your account settings all in one place.</p>
-        <router-link to="/userprofile" class="feature-btn">My Profile</router-link>
+        <router-link to="/profile" class="feature-btn">My Profile</router-link>
       </div>
     </section>
 
