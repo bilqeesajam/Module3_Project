@@ -18,11 +18,7 @@
     <div class="container">
       <h1 class="section-title">Featured Courses</h1>
       <div class="courses-grid">
-        <div
-          class="course-card"
-          v-for="(course, index) in courses"
-          :key="index"
-        >
+        <div class="course-card" v-for="(course, index) in courses" :key="index">
           <div class="course-img-container">
             <img :src="course.image" :alt="course.title" class="course-img" />
             <div class="card-hover-info">
@@ -41,8 +37,8 @@
             <div class="price-section">
               <span class="price">R {{ course.price }}</span>
             </div>
-            <button class="enroll-btn" @click="enroll(course.title)">
-              Enroll Now
+            <button class="enroll-btn" @click="enroll(course.course_id)" :disabled="isEnrolled(course.course_id)">
+              {{ isEnrolled(course.course_id) ? 'Already Enrolled' : 'Enroll Now' }}
             </button>
           </div>
         </div>
@@ -72,25 +68,89 @@ export default {
         { number: "24/7", label: "Support" },
       ],
       courses: [],
+      loading: false,
+      error: null,
+      userEnrollments: [],
+      userData: null
     };
   },
   methods: {
     async fetchCourses() {
+      this.loading = true;
       try {
         const response = await axios.get("http://localhost:9090/courses");
         this.courses = response.data;
+
+        if (this.isAuthenticated()) {
+          await this.fetchUserEnrollments();
+        }
       } catch (err) {
         console.error("Error fetching courses:", err);
+        this.error = "Failed to load courses. Please try again.";
+      } finally {
+        this.loading = false;
       }
     },
-    enroll(courseTitle) {
-      alert(`Enrolling in ${courseTitle} course!`);
-      // Enrollment logic to be added later
+
+    async fetchUserEnrollments() {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get("http://localhost:9090/user/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        this.userEnrollments = response.data.enrollments || [];
+        this.userData = response.data.user;
+      } catch (error) {
+        console.error("Error fetching enrollments:", error);
+      }
     },
+
+    isAuthenticated() {
+      return localStorage.getItem('token') !== null;
+    },
+
+    isEnrolled(courseId) {
+      return this.userEnrollments.some(e => e.course_id === courseId);
+    },
+
+    async enroll(courseId) {
+      if (!this.isAuthenticated()) {
+        alert('Please login to enroll in courses');
+        this.$router.push('/login');
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(
+          "http://localhost:9090/enrollments",
+          { course_id: courseId },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        if (response.data.success) {
+          alert('Successfully enrolled in the course!');
+          await this.fetchUserEnrollments();
+        }
+      } catch (error) {
+        console.error("Enrollment failed:", error);
+        const message = error.response?.data?.message ||
+          error.response?.data?.error ||
+          'Enrollment failed. Please try again.';
+        alert(message);
+      }
+    }
   },
   mounted() {
     this.fetchCourses();
-  },
+  }
 };
 </script>
 
@@ -268,5 +328,11 @@ export default {
   .courses-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.enroll-btn:disabled {
+  background: #444;
+  color: #aaa;
+  cursor: not-allowed;
 }
 </style>

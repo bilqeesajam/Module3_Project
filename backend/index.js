@@ -6,6 +6,7 @@ import { HashingPass } from './hashed.js';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import * as coursesController from './controllers/coursesController.js';
+import { verifyToken } from './authMiddleware.js';
 
 dotenv.config();
 const app = express();
@@ -24,6 +25,8 @@ const pool = mysql2.createPool({
 
 app.use(cors());
 app.use(express.json());
+
+// Dashboard stats route
 
 app.get('/dashboard/stats', async (req, res) => {
   try {
@@ -100,22 +103,38 @@ app.get('/dashboard/top-courses', async (req, res) => {
   res.json(rows);
 });
 
+// Login route - JWT
 app.post('/password-verification', async (req, res) => {
   const { username, password, role } = req.body;
 
-  const result = await verifyPassword(username, password, role);
-
-  if (!result.success) {
-    return res.status(200).json(result);
-  }
-
-  if (!process.env.JWT_SECRET) {
-    return res.status(500).json({ error: 'JWT_SECRET not set' });
-  }
-
   try {
+    const result = await verifyPassword(username, password, role);
+
+    if (!result.success) {
+      return res.status(200).json(result);
+    }
+
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ error: 'JWT_SECRET not set' });
+    }
+
+    const [userRows] = await pool.query(
+      'SELECT user_id, username, role FROM users WHERE username = ?',
+      [username]
+    );
+
+    if (userRows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = userRows[0];
+
     const token = jwt.sign(
-      { username, role: result.role },
+      {
+        user_id: user.user_id,
+        username: user.username,
+        role: user.role
+      },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
@@ -123,12 +142,12 @@ app.post('/password-verification', async (req, res) => {
     res.status(200).json({
       success: true,
       message: result.message,
-      role: result.role,
+      role: user.role,
       token,
     });
   } catch (error) {
-    console.error('JWT signing error:', error);
-    res.status(500).json({ error: 'Token generation failed' });
+    console.error('Password verification error:', error);
+    res.status(500).json({ error: 'Server error during authentication' });
   }
 });
 
@@ -329,6 +348,45 @@ app.get('/courses', async (req, res) => {
   }
 });
 app.get('/courses', coursesController.getCourses);
+
+
+app.post('/enrollments', verifyToken(), async (req, res) => {
+  const { course_id } = req.body;
+  const userId = req.user.user_id;
+  if (!course_id) {
+    return res.status(400).json({ message: 'Course ID is required' });
+  }
+
+  try {
+    const [course] = await pool.query(
+      'SELECT * FROM courses WHERE course_id = ?',
+      [course_id]
+    );
+
+    if (course.length === 0) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const [existing] = await pool.query(
+      'SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?',
+      [userId, course_id]
+    );
+
+    if (existing.length > 0) {
+      return res.status(400).json({ message: 'Already enrolled in this course' });
+    }
+    
+    await pool.query(
+      'INSERT INTO enrollments (user_id, course_id, status, enrolled_at) VALUES (?, ?, "active", NOW())',
+      [userId, course_id]
+    );
+
+    res.json({ success: true, message: 'Enrollment successful' });
+  } catch (error) {
+    console.error('Enrollment error:', error);
+    res.status(500).json({ message: 'Failed to enroll in course' });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);

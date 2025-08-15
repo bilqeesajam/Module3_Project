@@ -13,7 +13,7 @@ const pool = mysql.createPool({
 export async function verifyPassword(username, plainPassword, loginType) {
   try {
     const [rows] = await pool.execute(
-      'SELECT password, role FROM users WHERE username = ?',
+      'SELECT user_id, password, role FROM users WHERE username = ?',
       [username]
     );
 
@@ -21,7 +21,7 @@ export async function verifyPassword(username, plainPassword, loginType) {
       return { success: false, message: 'Invalid credentials.' };
     }
 
-    const { password: hashedPass, role } = rows[0];
+    const { user_id, password: hashedPass, role } = rows[0];
 
     // Strict role checking
     if (loginType === 'admin') {
@@ -42,7 +42,12 @@ export async function verifyPassword(username, plainPassword, loginType) {
       return { success: false, message: 'Invalid credentials.' };
     }
 
-    return { success: true, message: 'Login successful.', role };
+    return { 
+      success: true, 
+      message: 'Login successful.', 
+      role,
+      user_id
+    };
 
   } catch (error) {
     console.error(error);
