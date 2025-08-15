@@ -51,7 +51,7 @@ const stats = ref([]);
 
 onMounted(async () => {
   try {
-    // 1️⃣ Fetch stats
+    // Fetch stats
     const statsRes = await axios.get("http://localhost:9090/dashboard/stats");
     stats.value = [
       { title: "Active Students", value: statsRes.data.activeStudents },
@@ -60,7 +60,7 @@ onMounted(async () => {
       { title: "Total Revenue (ZAR)", value: `R ${Number(statsRes.data.totalRevenue).toLocaleString()}` }
     ];
 
-    // 2️⃣ Fetch charts
+    // Fetch charts
     const enrollmentsRes = await axios.get("http://localhost:9090/dashboard/enrollments-over-time");
     new Chart(document.getElementById("enrollmentsChart"), {
       type: "line",

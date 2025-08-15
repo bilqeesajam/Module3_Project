@@ -2,8 +2,6 @@
 CREATE SCHEMA IF NOT EXISTS `weblaunch_db`;
 USE `weblaunch_db`;
 
-SET SQL_SAFE_UPDATES = 0;
-
 -- Create Users Table --
 CREATE TABLE IF NOT EXISTS `weblaunch_db`.`users` (
     `user_id` INT PRIMARY KEY AUTO_INCREMENT,
@@ -11,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `weblaunch_db`.`users` (
     `email_address` VARCHAR(60) NOT NULL UNIQUE,
     `phone_number` VARCHAR(20) NOT NULL UNIQUE,
     `password` VARCHAR(255) NOT NULL,
-    `role` ENUM('admin', 'student', 'consumer') NOT NULL,
+    `role` ENUM('admin', 'consumer') DEFAULT 'consumer',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -22,7 +20,7 @@ CREATE TABLE IF NOT EXISTS `weblaunch_db`.`orders` (
     `user_id` INT NOT NULL,
     `package_type` ENUM('starter', 'professional', 'business plus') NOT NULL,
     `requirements` TEXT NOT NULL,
-    `status` ENUM('pending', 'in progress', 'completed'),
+    `status` ENUM('in progress', 'completed') DEFAULT 'in progress',
     `price` DECIMAL(10,2) NOT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -114,9 +112,9 @@ ALTER TABLE `weblaunch_db`.`payments`
 INSERT INTO `weblaunch_db`.`users` (username, email_address, phone_number, password, role)
 VALUES
 ('bilal_admin', 'bilal.khan@weblaunch.com', '0710000001', '$2b$10$tfXHEzjbnR/6stfkBRjh7OMYsKYFkBh0a0I6taiztp23rTAIwQqFW', 'admin'),
-('sarah_m', 'sarah.meyer@gmail.com', '0710000002', '$2b$10$Pr65BTMJqljhv9mB0XPt3eC70Y2QkTV2X1szw4nqjkPdsS0KKNGI6', 'student'),
-('thabo_d', 'thabo.dlamini@yahoo.com', '0710000003', '$2b$10$SBzwccIPfQj68KThTaml.usqH6J.sKALwQJKXIw.As8IGkXqP4kGG', 'student'),
-('amy_lee', 'amy.lee@hotmail.com', '0710000004', '$2b$10$3XpQbYhfUAepXG9hPr8zfuUH7jF5CVLI2eGMlrERKKrlpzVnsBKRe', 'student'),
+('sarah_m', 'sarah.meyer@gmail.com', '0710000002', '$2b$10$Pr65BTMJqljhv9mB0XPt3eC70Y2QkTV2X1szw4nqjkPdsS0KKNGI6', 'consumer'),
+('thabo_d', 'thabo.dlamini@yahoo.com', '0710000003', '$2b$10$SBzwccIPfQj68KThTaml.usqH6J.sKALwQJKXIw.As8IGkXqP4kGG', 'consumer'),
+('amy_lee', 'amy.lee@hotmail.com', '0710000004', '$2b$10$3XpQbYhfUAepXG9hPr8zfuUH7jF5CVLI2eGMlrERKKrlpzVnsBKRe', 'consumer'),
 ('john_smith', 'john.smith@gmail.com', '0710000005', '$2b$10$usezbbtAZDjYbs73RURhl.iEktesKpCIfm0ftiIE6GgDZRxsGSnkW', 'consumer'),
 ('fatima_p', 'fatima.patel@outlook.com', '0710000006', '$2b$10$htnqtobvzXuqZANdpCe6q.1ceoyMS1oHmeqtrNzkdYR4BuLGuoRP2', 'consumer'),
 ('michael_b', 'michael.brown@yahoo.com', '0710000007', '$2b$10$DLi9./Dyu/V6h7oxThWzrOwFxLh/rBtfED3Omte/PEa1gFBhEPi7a', 'consumer'),
@@ -128,14 +126,14 @@ VALUES
 
 INSERT INTO `weblaunch_db`.`orders` (user_id, package_type, requirements, status, price)
 VALUES
-(5, 'starter', 'Basic company website with contact form', 'pending', 1500.00),
+(5, 'starter', 'Basic company website with contact form', 'in progress', 1500.00),
 (6, 'professional', 'Business portfolio site with blog', 'in progress', 5000.00),
 (7, 'business plus', 'Online shop with 50 products', 'completed', 12000.00),
-(8, 'starter', 'Personal blog setup', 'pending', 1000.00),
+(8, 'starter', 'Personal blog setup', 'in progress', 1000.00),
 (9, 'professional', 'Restaurant website with booking system', 'completed', 7500.00),
 (10, 'starter', 'Artist portfolio site', 'in progress', 2000.00),
 (5, 'business plus', 'Shop with payment gateway', 'completed', 11000.00),
-(6, 'professional', 'Corporate intranet portal', 'pending', 8500.00),
+(6, 'professional', 'Corporate intranet portal', 'in progress', 8500.00),
 (7, 'starter', 'Landing page for campaign', 'completed', 900.00),
 (8, 'business plus', 'Fashion store with payment and delivery tracking', 'in progress', 13000.00);
 

@@ -27,7 +27,6 @@ app.use(cors());
 app.use(express.json());
 
 // Dashboard stats route
-
 app.get('/dashboard/stats', async (req, res) => {
   try {
     const [[{ activeStudents }]] = await pool.query(`
@@ -385,6 +384,46 @@ app.post('/enrollments', verifyToken(), async (req, res) => {
   } catch (error) {
     console.error('Enrollment error:', error);
     res.status(500).json({ message: 'Failed to enroll in course' });
+  }
+});
+
+app.get('/orders', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        o.order_id,
+        u.username,
+        o.package_type AS package_name,
+        o.requirements,
+        o.status,
+        o.price AS amount,
+        o.created_at
+      FROM orders o
+      JOIN users u ON o.user_id = u.user_id
+      ORDER BY o.created_at DESC
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+app.put('/orders/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  try {
+    const [result] = await pool.query(
+      "UPDATE orders SET status = ? WHERE order_id = ?",
+      [status, id]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+    res.json({ message: "Order updated successfully" });
+  } catch (error) {
+    console.error("Error updating order:", error);
+    res.status(500).json({ error: "Failed to update order" });
   }
 });
 

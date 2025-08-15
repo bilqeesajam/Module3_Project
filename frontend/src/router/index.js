@@ -78,7 +78,6 @@ const router = createRouter({
   routes
 })
 
-// router.js
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token');
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
@@ -87,7 +86,7 @@ router.beforeEach((to, from, next) => {
   if (requiresAuth && !token) {
     next('/login');
   } else if (requiresAuth && token) {
-    // Decode token to check role
+    
     const decoded = jwtDecode(token);
     if (requiredRole && decoded.role !== requiredRole) {
       next('/unauthorized');

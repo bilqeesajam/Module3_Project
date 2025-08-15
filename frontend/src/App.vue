@@ -41,7 +41,7 @@ export default {
 </script>
 <style>
 body {
-  background-color: #112B4A; /* Match card navy */
+  background-color: #112B4A;
 }
 .main-content {
   margin-left: 210px;
