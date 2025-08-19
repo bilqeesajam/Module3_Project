@@ -1,4 +1,5 @@
 <template>
+  <UserSidebar/>
   <div class="profile-container">
     <div class="profile-card" v-if="!loading && user">
       <div class="profile-header">
@@ -55,6 +56,7 @@
 </template>
 
 <script>
+import UserSidebar from "@/components/UserSidebar.vue";
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
@@ -111,6 +113,9 @@ export default {
     onMounted(fetchProfile);
 
     return { user, enrollments, orders, payments, loading, error, formatDate };
+  },
+  components: {
+    UserSidebar
   }
 };
 </script>
@@ -118,99 +123,88 @@ export default {
 <style scoped>
 .profile-container {
   min-height: 100vh;
-  background: #112B4A;
+  background: #000;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 2rem;
+  font-family: "Segoe UI", sans-serif;
+  color: #fff;
 }
+
 .profile-card {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(32, 87, 129, 0.15);
-  max-width: 420px;
+  background: #111;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(255, 165, 0, 0.15);
+  max-width: 480px;
   width: 100%;
-  padding: 2rem 2.5rem;
+  padding: 2rem;
   text-align: center;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
 .profile-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 12px 40px rgba(32, 87, 129, 0.25);
+  box-shadow: 0 12px 35px rgba(255, 165, 0, 0.25);
 }
+
 .profile-header {
   margin-bottom: 2rem;
 }
+
 .profile-avatar {
-  width: 90px;
-  height: 90px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
-  border: 4px solid #205781;
+  border: 4px solid orange;
   margin-bottom: 1rem;
 }
+
 .profile-role {
-  color: #FFA500;
+  color: orange;
   font-weight: 600;
   margin-bottom: 0.5rem;
   text-transform: capitalize;
 }
+
 .profile-details h4 {
-  color: #205781;
+  color: orange;
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
+  text-align: left;
 }
+
 .profile-details ul {
   list-style: none;
   padding: 0;
   margin: 0 0 1rem 0;
-  color: #205781;
+  color: #ddd;
   text-align: left;
 }
+
 .profile-details li {
   margin-bottom: 0.5rem;
 }
-.completed {
-  color: #28a745;
-  font-weight: bold;
-}
-.active {
-  color: #FFA500;
-  font-weight: bold;
-}
-.pending {
-  color: #FFA500;
-  font-weight: bold;
-}
-.in\ progress {
-  color: #17a2b8;
-  font-weight: bold;
-}
+
+/* Status Colors */
+.completed { color: #28a745; font-weight: bold; }
+.pending { color: #ffc107; font-weight: bold; }
+.in-progress { color: #17a2b8; font-weight: bold; }
+.active { color: orange; font-weight: bold; }
+.failed { color: #dc3545; font-weight: bold; }
+
 .empty-text {
-  color: #777;
+  color: #aaa;
   font-style: italic;
 }
+
 .loading-text {
-  color: #fff;
+  color: orange;
   font-size: 1.2rem;
 }
-.edit-btn {
-  display: inline-block;
-  margin-top: 1rem;
-  background: #FFA500;
-  color: #205781;
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
-  text-decoration: none;
+
+.error-text {
+  color: #dc3545;
   font-weight: bold;
-  transition: background 0.3s, color 0.3s;
 }
-.edit-btn:hover {
-  background: #205781;
-  color: #fff;
-}
-.completed { color: #28a745; }
-.pending { color: #ffc107; }
-.in-progress { color: #17a2b8; }
-.active { color: #007bff; }
-.failed { color: #dc3545; }
 </style>

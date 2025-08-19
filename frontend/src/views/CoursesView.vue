@@ -1,4 +1,5 @@
 <template>
+  <UserSidebar/>
   <div class="Courses">
     <div class="banner">
       <div class="banner-content">
@@ -59,7 +60,7 @@
 
 <script>
 import axios from "axios";
-
+import UserSidebar from "@/components/UserSidebar.vue";
 export default {
   data() {
     return {
@@ -136,7 +137,7 @@ export default {
         );
 
         if (response.data.success) {
-          alert('Successfully enrolled in the course!');
+          alert('Successfully enrolled in the course! The course fee has been added to your payment balance.');
           await this.fetchUserEnrollments();
         }
       } catch (error) {
@@ -150,6 +151,9 @@ export default {
   },
   mounted() {
     this.fetchCourses();
+  },
+  components: {
+    UserSidebar
   }
 };
 </script>

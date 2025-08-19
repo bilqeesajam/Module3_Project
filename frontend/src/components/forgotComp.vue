@@ -67,7 +67,7 @@ export default {
 }
 .left-side{
   flex: 1;
-  background-color: #ffffff; /* cyan */
+  background-color: #ffffff;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -75,14 +75,14 @@ export default {
 }
 .right-side{
    flex: 1;
-  background-color: #4f46e5; /* purple */
+  background-color: #4f46e5; 
   color: white;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 70px;
   padding-bottom: 7rem;
-  border-top-right-radius: 100px; /* Curve inward */
+  border-top-right-radius: 100px; 
   border-bottom-right-radius: 100px;
 }
 .heading {

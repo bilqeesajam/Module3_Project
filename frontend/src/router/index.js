@@ -3,23 +3,19 @@ import LoginView from '@/views/LoginView.vue'
 import ForgotView from '@/views/ForgotView.vue'
 import LearnersView from '@/views/LearnersView.vue'
 import SignupView from '@/views/SignupView.vue'
-import HomeView from '@/views/HomeView.vue'
+import HomeView from '@/views/AdminHome.vue'
 import UsersComp from '@/components/UsersComp.vue'
-import HomeView2 from '@/views/HomeView2.vue'
+import HomeView2 from '@/views/UserHome.vue'
 import CoursesView from '@/views/CoursesView.vue'
 import PriceListView from '@/views/PriceListView.vue'
 import UsersProfileView from '@/views/UsersProfileView.vue'
+import PaymentsComp from '@/components/PaymentsComp.vue'
 
 const routes = [
   {
     path: '/',
     name: 'login',
     component: LoginView
-  },
-  {
-    path: '/about',
-    name: 'about',
-    component: () => import( '../views/AboutView.vue')
   },
   {
     path: '/home',
@@ -70,6 +66,11 @@ const routes = [
     path: '/profile',
     name: 'profile',
     component: UsersProfileView
+  },
+  {
+    path: '/payments',
+    name: 'payments',
+    component: PaymentsComp
   }
 ]
 
@@ -86,7 +87,6 @@ router.beforeEach((to, from, next) => {
   if (requiresAuth && !token) {
     next('/login');
   } else if (requiresAuth && token) {
-    
     const decoded = jwtDecode(token);
     if (requiredRole && decoded.role !== requiredRole) {
       next('/unauthorized');

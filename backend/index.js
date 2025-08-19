@@ -5,7 +5,6 @@ import mysql2 from 'mysql2/promise';
 import { HashingPass } from './hashed.js';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
-import * as coursesController from './controllers/coursesController.js';
 import { verifyToken } from './authMiddleware.js';
 
 dotenv.config();
@@ -264,14 +263,14 @@ app.post('/forgot-password', async (req, res) => {
 // Get user profile
 app.get('/user/profile', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
-  
+
   if (!token) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Fetch user data
     const [user] = await pool.query(`
       SELECT 
@@ -346,44 +345,86 @@ app.get('/courses', async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
-app.get('/courses', coursesController.getCourses);
-
 
 app.post('/enrollments', verifyToken(), async (req, res) => {
   const { course_id } = req.body;
   const userId = req.user.user_id;
+
   if (!course_id) {
     return res.status(400).json({ message: 'Course ID is required' });
   }
 
+  const connection = await pool.getConnection();
   try {
-    const [course] = await pool.query(
-      'SELECT * FROM courses WHERE course_id = ?',
+    await connection.beginTransaction();
+
+    // 1. Get course price
+    const [course] = await connection.query(
+      'SELECT price FROM courses WHERE course_id = ?',
       [course_id]
     );
-
     if (course.length === 0) {
+      await connection.rollback();
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    const [existing] = await pool.query(
-      'SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?',
+    // 2. Check existing enrollment
+    const [existing] = await connection.query(
+      'SELECT 1 FROM enrollments WHERE user_id = ? AND course_id = ?',
       [userId, course_id]
     );
-
     if (existing.length > 0) {
-      return res.status(400).json({ message: 'Already enrolled in this course' });
+      await connection.rollback();
+      return res.status(400).json({ message: 'Already enrolled' });
     }
-    
-    await pool.query(
-      'INSERT INTO enrollments (user_id, course_id, status, enrolled_at) VALUES (?, ?, "active", NOW())',
-      [userId, course_id]
+
+    // 3. Find or create payment record
+    const [payment] = await connection.query(
+      `SELECT payment_id FROM payments WHERE user_id = ? FOR UPDATE`,
+      [userId]
     );
 
-    res.json({ success: true, message: 'Enrollment successful' });
+    let paymentId;
+    if (payment.length > 0) {
+      paymentId = payment[0].payment_id;
+      // Update existing payment
+      await connection.query(
+        `UPDATE payments 
+         SET total_amount = total_amount + ?,
+             status = CASE 
+               WHEN amount_paid >= (total_amount + ?) THEN 'completed'
+               ELSE 'pending'
+             END
+         WHERE payment_id = ?`,
+        [course[0].price, course[0].price, paymentId]
+      );
+    } else {
+      // Create new payment record
+      const [result] = await connection.query(
+        `INSERT INTO payments 
+         (user_id, total_amount, amount_paid, status) 
+         VALUES (?, ?, 0, 'pending')`,
+        [userId, course[0].price]
+      );
+      paymentId = result.insertId;
+    }
+
+    // 4. Create enrollment linked to payment
+    await connection.query(
+      `INSERT INTO enrollments 
+       (user_id, course_id, status, enrolled_at, user_payment_id) 
+       VALUES (?, ?, 'active', NOW(), ?)`,
+      [userId, course_id, paymentId]
+    );
+
+    await connection.commit();
+    res.json({ success: true, message: 'Enrolled successfully' });
   } catch (error) {
+    await connection.rollback();
     console.error('Enrollment error:', error);
-    res.status(500).json({ message: 'Failed to enroll in course' });
+    res.status(500).json({ error: 'Enrollment failed' });
+  } finally {
+    connection.release();
   }
 });
 
@@ -426,6 +467,262 @@ app.put('/orders/:id', async (req, res) => {
     res.status(500).json({ error: "Failed to update order" });
   }
 });
+
+// POST create new order
+app.post('/orders', verifyToken(), async (req, res) => {
+  const { package_type, requirements, price } = req.body;
+  const userId = req.user.user_id;
+
+  if (!package_type || !requirements || !price) {
+    return res.status(400).json({ error: 'Package type, requirements and price are required' });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // 1. Create the new order
+    const [orderResult] = await connection.query(
+      `INSERT INTO orders (user_id, package_type, requirements, status, price) 
+       VALUES (?, ?, ?, 'in progress', ?)`,
+      [userId, package_type, requirements, price]
+    );
+
+    // 2. Find or create payment record for the user
+    const [paymentRows] = await connection.query(
+      'SELECT payment_id FROM payments WHERE user_id = ? FOR UPDATE',
+      [userId]
+    );
+
+    let paymentId;
+    if (paymentRows.length > 0) {
+      paymentId = paymentRows[0].payment_id;
+      // Update existing payment's total_amount
+      await connection.query(
+        'UPDATE payments SET total_amount = total_amount + ? WHERE payment_id = ?',
+        [price, paymentId]
+      );
+    } else {
+      // Create new payment record
+      const [paymentResult] = await connection.query(
+        `INSERT INTO payments 
+         (user_id, total_amount, amount_paid, status) 
+         VALUES (?, ?, 0, 'pending')`,
+        [userId, price]
+      );
+      paymentId = paymentResult.insertId;
+    }
+
+    // 3. Update the order with the payment_id
+    await connection.query(
+      'UPDATE orders SET user_payment_id = ? WHERE order_id = ?',
+      [paymentId, orderResult.insertId]
+    );
+
+    await connection.commit();
+
+    const newOrder = {
+      order_id: orderResult.insertId,
+      user_id: userId,
+      package_type,
+      requirements,
+      status: 'in progress',
+      price,
+      created_at: new Date()
+    };
+
+    res.status(201).json(newOrder);
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error creating order:', error);
+    res.status(500).json({ error: 'Failed to create order' });
+  } finally {
+    connection.release();
+  }
+});
+
+// PAYMENT ENDPOINTS
+
+
+// Process a payment (add funds to account)
+
+app.post('/payments', verifyToken(), async (req, res) => {
+  const { amount_paid, payment_method, reference } = req.body;
+  const userId = req.user.user_id;
+
+  if (!amount_paid || !payment_method) {
+    return res.status(400).json({ error: 'Amount and payment method are required' });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // 1. Get current payment record
+    const [paymentRows] = await connection.query(
+      'SELECT * FROM payments WHERE user_id = ? FOR UPDATE',
+      [userId]
+    );
+
+    if (paymentRows.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ error: 'Payment record not found' });
+    }
+
+    const paymentId = paymentRows[0].payment_id;
+    const newAmountPaid = parseFloat(paymentRows[0].amount_paid) + parseFloat(amount_paid);
+    const totalAmount = parseFloat(paymentRows[0].total_amount);
+
+    // 2. Update payment record (without directly setting outstanding_balance)
+    await connection.query(
+      `UPDATE payments 
+       SET amount_paid = ?, 
+           payment_method = ?,
+           status = CASE 
+             WHEN ? >= total_amount THEN 'completed'
+             ELSE 'pending'
+           END
+       WHERE payment_id = ?`,
+      [newAmountPaid, payment_method, newAmountPaid, paymentId]
+    );
+
+    // 3. Get the updated record with calculated outstanding_balance
+    const [updatedPayment] = await connection.query(
+      'SELECT outstanding_balance FROM payments WHERE payment_id = ?',
+      [paymentId]
+    );
+
+    await connection.commit();
+
+    res.json({ 
+      success: true,
+      message: 'Payment processed successfully',
+      outstanding_balance: updatedPayment[0].outstanding_balance,
+      reference
+    });
+  } catch (error) {
+    await connection.rollback();
+    console.error('Payment processing error:', error);
+    res.status(500).json({ error: 'Failed to process payment' });
+  } finally {
+    connection.release();
+  }
+});
+
+app.post('/payments/complete', verifyToken(), async (req, res) => {
+  const { orderId, courseId, amount, method, reference } = req.body;
+  const userId = req.user.user_id;
+
+  if (!amount || !method) {
+    return res.status(400).json({ error: 'Amount and method are required' });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // 1. Get current payment record with proper numeric casting
+    const [paymentRows] = await connection.query(
+      'SELECT payment_id, total_amount, amount_paid, status FROM payments WHERE user_id = ? FOR UPDATE',
+      [userId]
+    );
+
+    if (paymentRows.length === 0) {
+      // Handle case where no payment record exists
+      const [paymentResult] = await connection.query(
+        'INSERT INTO payments (user_id, total_amount, amount_paid, status, payment_method) VALUES (?, ?, ?, ?, ?)',
+        [userId, amount, amount, 'completed', method]
+      );
+
+      await connection.commit();
+      return res.json({
+        success: true,
+        message: 'Payment processed successfully',
+        outstanding_balance: 0,
+        reference
+      });
+    }
+
+    const payment = paymentRows[0];
+    
+    // 2. Convert amounts to numbers to ensure proper addition
+    const currentAmountPaid = parseFloat(payment.amount_paid);
+    const paymentAmount = parseFloat(amount);
+    const newAmountPaid = currentAmountPaid + paymentAmount;
+    const totalAmount = parseFloat(payment.total_amount);
+    const newStatus = newAmountPaid >= totalAmount ? 'completed' : 'pending';
+
+    // 3. Update payment record
+    await connection.query(
+      'UPDATE payments SET amount_paid = ?, payment_method = ?, status = ? WHERE payment_id = ?',
+      [newAmountPaid, method, newStatus, payment.payment_id]
+    );
+
+    // 4. Update linked entities if specified
+    if (orderId) {
+      await connection.query(
+        'UPDATE orders SET status = "completed" WHERE order_id = ? AND user_id = ?',
+        [orderId, userId]
+      );
+    }
+    
+    if (courseId) {
+      await connection.query(
+        'UPDATE enrollments SET status = "completed" WHERE course_id = ? AND user_id = ?',
+        [courseId, userId]
+      );
+    }
+
+    await connection.commit();
+
+    // 5. Get the updated payment record to return accurate outstanding balance
+    const [updatedPayment] = await connection.query(
+      'SELECT total_amount - amount_paid AS outstanding_balance FROM payments WHERE payment_id = ?',
+      [payment.payment_id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Payment processed successfully',
+      outstanding_balance: updatedPayment[0].outstanding_balance,
+      reference
+    });
+
+  } catch (error) {
+    await connection.rollback();
+    console.error('Payment error:', error);
+    res.status(500).json({ error: 'Failed to process payment' });
+  } finally {
+    connection.release();
+  }
+});
+/**
+ * Get payment history for a user
+ */
+app.get('/payments/history', verifyToken(), async (req, res) => {
+  const userId = req.user.user_id;
+  try {
+    const [rows] = await pool.query(
+      `SELECT 
+        payment_id, 
+        total_amount, 
+        amount_paid, 
+        outstanding_balance, 
+        status, 
+        payment_method, 
+        created_at
+       FROM payments
+       WHERE user_id = ?
+       ORDER BY created_at DESC`,
+      [userId]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching history:', error);
+    res.status(500).json({ error: 'Failed to fetch history' });
+  }
+});
+
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);

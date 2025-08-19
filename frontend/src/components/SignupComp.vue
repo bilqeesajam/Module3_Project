@@ -101,7 +101,6 @@ export default {
 .top-half {
   flex: 1;
   background-color: #ffffff;
-  /* cyan */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -111,7 +110,6 @@ export default {
 .bottom-half {
   flex: 1;
   background-color: #4f46e5;
-  /* purple */
   color: white;
   display: flex;
   justify-content: center;
@@ -119,7 +117,6 @@ export default {
   padding: 50px;
   padding-bottom: 50px;
   border-top-right-radius: 100px;
-  /* Curve inward */
   border-top-left-radius: 100px;
   border-bottom-left-radius: 100px;
   border-bottom-right-radius: 100px;

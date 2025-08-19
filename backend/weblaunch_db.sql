@@ -77,11 +77,11 @@ ALTER TABLE `weblaunch_db`.`enrollments`
 CREATE TABLE IF NOT EXISTS `weblaunch_db`.`payments` (
     `payment_id` INT PRIMARY KEY AUTO_INCREMENT,
     `user_id` INT NOT NULL,
-    `order_id` INT NULL,
-    `course_id` INT NULL,
-    `amount_paid` DECIMAL(10,2) NOT NULL,
+    `amount_paid` DECIMAL(10,2) DEFAULT 0.00,
     `payment_method` ENUM('card', 'eft', 'wallet') NOT NULL,
-    `status` ENUM('pending', 'completed', 'failed') NOT NULL,
+    `status` ENUM('pending', 'completed') NOT NULL,
+    `total_amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `outstanding_balance` DECIMAL(10,2) GENERATED ALWAYS AS (total_amount - amount_paid) STORED,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -89,23 +89,48 @@ CREATE TABLE IF NOT EXISTS `weblaunch_db`.`payments` (
 -- Add Indexes and Foreign Keys to Payments --
 ALTER TABLE `weblaunch_db`.`payments`
     ADD INDEX `idx_payments_user_id` (`user_id`),
-    ADD INDEX `idx_payments_order_id` (`order_id`),
-    ADD INDEX `idx_payments_course_id` (`course_id`),
     ADD CONSTRAINT `FK_payments_user`
         FOREIGN KEY (`user_id`)
         REFERENCES `weblaunch_db`.`users` (`user_id`)
         ON DELETE CASCADE
-        ON UPDATE CASCADE,
-    ADD CONSTRAINT `FK_payments_order`
-        FOREIGN KEY (`order_id`)
-        REFERENCES `weblaunch_db`.`orders` (`order_id`)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-    ADD CONSTRAINT `FK_payments_course`
-        FOREIGN KEY (`course_id`)
-        REFERENCES `weblaunch_db`.`courses` (`course_id`)
-        ON DELETE CASCADE
         ON UPDATE CASCADE;
+
+-- Simulated Payment Gateway Calculation Stuff
+
+-- Then create the trigger with proper delimiter handling
+DELIMITER //
+
+CREATE TRIGGER trg_update_payment_status_update
+BEFORE UPDATE ON payments
+FOR EACH ROW
+BEGIN
+    IF NEW.amount_paid < NEW.total_amount THEN
+        SET NEW.status = 'pending';
+    ELSE
+        SET NEW.status = 'completed';
+    END IF;
+END//
+
+DELIMITER ;
+
+-- Create the function with distinct parameter name
+DELIMITER //
+
+CREATE FUNCTION calculate_outstanding(payment_id_param INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE outstanding DECIMAL(10,2);
+
+    SELECT (total_amount - amount_paid)
+    INTO outstanding
+    FROM payments
+    WHERE payment_id = payment_id_param;
+
+    RETURN outstanding;
+END//
+
+DELIMITER ;
         
 -- Populate Users
 
@@ -127,15 +152,11 @@ VALUES
 INSERT INTO `weblaunch_db`.`orders` (user_id, package_type, requirements, status, price)
 VALUES
 (5, 'starter', 'Basic company website with contact form', 'in progress', 1500.00),
-(6, 'professional', 'Business portfolio site with blog', 'in progress', 5000.00),
-(7, 'business plus', 'Online shop with 50 products', 'completed', 12000.00),
-(8, 'starter', 'Personal blog setup', 'in progress', 1000.00),
-(9, 'professional', 'Restaurant website with booking system', 'completed', 7500.00),
-(10, 'starter', 'Artist portfolio site', 'in progress', 2000.00),
-(5, 'business plus', 'Shop with payment gateway', 'completed', 11000.00),
-(6, 'professional', 'Corporate intranet portal', 'in progress', 8500.00),
-(7, 'starter', 'Landing page for campaign', 'completed', 900.00),
-(8, 'business plus', 'Fashion store with payment and delivery tracking', 'in progress', 13000.00);
+(6, 'professional', 'Business portfolio site with blog', 'in progress', 3500.00),
+(7, 'business plus', 'Online shop with 50 products', 'completed', 6000.00),
+(8, 'starter', 'Personal blog setup', 'in progress', 1500.00),
+(9, 'professional', 'Restaurant website with booking system', 'completed', 3500.00),
+(10, 'starter', 'Artist portfolio site', 'in progress', 1500.00);
 
 -- Populate Courses
 
@@ -144,7 +165,7 @@ VALUES
 ('HTML', 'Learn the fundamentals of HTML.', 400.00, "bx bxl-html5", "https://nestify.io/wp-content/uploads/2024/01/What-is-HTML.jpg", '30 hours of content|5 real-world projects|Certificate of completion'),
 ('CSS', 'Learn how to style websites using CSS.', 500.00, "bx bxs-file-css", "https://www.syncfusion.com/blogs/wp-content/uploads/2024/09/5-Modern-CSS-Styles-You-Should-Know-In-2024.jpg", '35 hours of content|Flexbox and Grid|Animations workshop'),
 ('JavaScript', 'Interactive web development with JavaScript.', 800.00, "bx bxl-javascript", "https://bairesdev.mo.cloudinary.net/blog/2023/08/What-Is-JavaScript-Used-For.jpg", '50 hours of content|ES6+ features|10 practical projects'),
-('Node.js and Express', 'Backend development with Node.js and Express framework.', 1200.00, "bx bxl-nodejs", "https://webandcrafts.com/_next/image?url=https%3A%2F%2Fadmin.wac.co%2Fuploads%2FNode_js_Architecture_A_Comprehensive_Guide_1_af37a73e1e.png&w=4500&q=90", '50 hours of content|Build REST APIs|Authentication systems'),
+('Node.js and Express', 'Backend development with Node.js and Express framework.', 1500.00, "bx bxl-nodejs", "https://webandcrafts.com/_next/image?url=https%3A%2F%2Fadmin.wac.co%2Fuploads%2FNode_js_Architecture_A_Comprehensive_Guide_1_af37a73e1e.png&w=4500&q=90", '50 hours of content|Build REST APIs|Authentication systems'),
 ('PHP', 'Learn frontend and backend development using PHP.', 900.00, "bx bxl-php", "https://kinsta.com/wp-content/uploads/2023/10/PHP_Feature-Image-1024x536.jpg", '45 hours of content|Laravel framework|CMS development'),
 ('Vue.js', 'Frontend JavaScript framework for building UIs.', 1000.00, "bx bxl-vue.js", "https://api.next.otakoyi.software/uploads/vuejs_and_seo_your_steps_to_take_to_become_more_seo_friendly_317x237_76f8b1d078.png", '40 hours of content|State management|Real-world projects');
 
@@ -155,25 +176,42 @@ VALUES
 (2, 1, 25.00, 'active', NOW()),
 (3, 2, 100.00, 'completed', NOW()),
 (4, 3, 50.00, 'active', NOW()),
-(2, 4, 0.00, 'active', NOW()),
-(3, 5, 75.00, 'active', NOW()),
-(4, 6, 100.00, 'completed', NOW()),
-(2, 3, 10.00, 'active', NOW()),
-(3, 1, 0.00, 'active', NOW()),
-(4, 2, 80.00, 'completed', NOW()),
-(2, 3, 20.00, 'active', NOW());
+(5, 6, 100.00, 'completed', NOW()),
+(6, 3, 10.00, 'active', NOW()),
+(7, 1, 0.00, 'active', NOW()),
+(8, 2, 80.00, 'completed', NOW()),
+(9, 3, 20.00, 'active', NOW());
 
 -- Populate Payments
 
-INSERT INTO `weblaunch_db`.`payments` (user_id, order_id, course_id, amount_paid, payment_method, status)
+INSERT INTO `weblaunch_db`.`payments` (user_id, amount_paid, payment_method, status)
 VALUES
-(5, 1, NULL, 1500.00, 'card', 'completed'),
-(6, 2, NULL, 5000.00, 'eft', 'completed'),
-(7, 3, NULL, 12000.00, 'wallet', 'completed'),
-(8, 4, NULL, 1000.00, 'card', 'pending'),
-(9, 5, NULL, 7500.00, 'eft', 'completed'),
-(10, 6, NULL, 2000.00, 'wallet', 'completed'),
-(5, 2, NULL, 11000.00, 'card', 'completed'),
-(6, 8, NULL, 8500.00, 'eft', 'pending'),
-(2, NULL, 1, 400.00, 'card', 'completed'),
-(3, NULL, 3, 800.00, 'eft', 'completed');
+(2, 400.00, 'card', 'pending'),
+(3, 500.00, 'eft', 'pending'),
+(4, 800.00, 'eft', 'pending'),
+(5, 2500.00, 'eft', 'pending'),
+(6, 4300.00, 'eft', 'pending'),
+(7, 6400.00, 'wallet', 'pending'),
+(8, 2000.00, 'card', 'pending'),
+(9, 4300.00, 'eft', 'pending'),
+(10, 1500.00, 'eft', 'pending');
+
+ALTER TABLE orders ADD COLUMN user_payment_id INT;
+ALTER TABLE enrollments ADD COLUMN user_payment_id INT;
+
+ALTER TABLE payments ADD UNIQUE INDEX idx_user_payment (user_id);
+
+DELIMITER //
+
+CREATE TRIGGER trg_update_payment_status_insert
+BEFORE INSERT ON payments
+FOR EACH ROW
+BEGIN
+    IF NEW.amount_paid >= NEW.total_amount THEN
+        SET NEW.status = 'completed';
+    ELSE
+        SET NEW.status = 'pending';
+    END IF;
+END//
+
+DELIMITER ;

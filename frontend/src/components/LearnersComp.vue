@@ -97,7 +97,6 @@ export default {
 .left-side {
   flex: 1;
   background-color: #4f46e5;
-  /* purple */
   color: white;
   display: flex;
   justify-content: center;
@@ -105,14 +104,12 @@ export default {
   padding: 70px;
   padding-bottom: 80px;
   border-top-right-radius: 100px;
-  /* Curve inward */
   border-bottom-right-radius: 100px;
 }
 
 .right-side {
   flex: 1;
   background-color: #ffffff;
-  /* cyan */
   display: flex;
   flex-direction: column;
   justify-content: center;

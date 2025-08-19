@@ -1,4 +1,5 @@
 <template>
+  <SidebarTwo/>
   <div class="orders-container">
     <h2>Orders</h2>
     <table>
@@ -41,6 +42,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import axios from "axios";
+import SidebarTwo from "@/components/AdminSidebar.vue";
 
 const orders = ref([]);
 
@@ -93,7 +95,7 @@ onMounted(fetchOrders);
 h2 {
   margin-bottom: 1rem;
   font-size: 1.4rem;
-  color: #001F3F;
+  color: #111;
   border-bottom: 2px solid #FF851B;
   padding-bottom: 0.5rem;
 }
@@ -107,7 +109,7 @@ table {
 }
 
 thead {
-  background-color: #001F3F;
+  background-color: #111;
 }
 
 th,
@@ -154,7 +156,7 @@ button:hover {
 }
 
 .status-badge.completed {
-  background-color: #001F3F;
+  background-color: #111;
 }
 
 .status-badge.in-progress {
