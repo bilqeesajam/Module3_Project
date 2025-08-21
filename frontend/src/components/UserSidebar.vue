@@ -15,7 +15,14 @@
 export default {
   methods: {
     handleLogout() {
-      console.log('Logging out...');
+      localStorage.removeItem('token');
+
+      this.$router.replace('/users-login');
+
+      window.history.pushState(null, null, '/users-login');
+      window.addEventListener('popstate', function () {
+        window.location.replace('/users-login'); 
+      });
     }
   }
 }

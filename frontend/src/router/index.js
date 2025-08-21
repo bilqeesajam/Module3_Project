@@ -1,15 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/LoginView.vue'
 import ForgotView from '@/views/ForgotView.vue'
-import LearnersView from '@/views/LearnersView.vue'
 import SignupView from '@/views/SignupView.vue'
 import HomeView from '@/views/AdminHome.vue'
 import UsersComp from '@/components/UsersComp.vue'
-import HomeView2 from '@/views/UserHome.vue'
+import HomeView2 from '@/views/HomeView2.vue'
 import CoursesView from '@/views/CoursesView.vue'
 import PriceListView from '@/views/PriceListView.vue'
 import UsersProfileView from '@/views/UsersProfileView.vue'
 import PaymentsComp from '@/components/PaymentsComp.vue'
+import UsersLoginView from '@/views/UsersLoginView.vue'
 
 const routes = [
   {
@@ -28,14 +28,9 @@ const routes = [
     component: ForgotView
   },
   {
-    path: '/forgot',
-    name: 'forgot',
-    component: ForgotView
-  },
-  {
-    path: '/learners',
-    name: 'learners',
-    component: LearnersView
+    path: '/users-login',
+    name: 'users-login',
+    component: UsersLoginView
   },
   {
     path: '/signup',

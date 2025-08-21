@@ -1,5 +1,5 @@
 <template>
-  <AdminSidebar/>
+  <AdminSidebar />
   <div class="container py-4">
     <h1 class="text-center mb-2" style="color: #205781; font-weight: 700;">Hello Admin</h1>
 
@@ -130,15 +130,18 @@ body {
   background-color: #f8f9fa;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
+
 .card {
   border-radius: 10px;
 }
+
 .chart-card {
   min-height: 340px;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
+
 .chart-card canvas {
   flex: 1 1 auto;
   max-height: 220px;

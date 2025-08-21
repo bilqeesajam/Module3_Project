@@ -1,5 +1,5 @@
 <template>
-  <UserSidebar/>
+  <UserSidebar />
   <section class="PriceList">
     <div class="container">
       <h2 class="section-title">Our Website Packages</h2>
@@ -95,12 +95,32 @@
     </div>
 
     <footer class="landing-footer">
-      <p>© 2025 WEBLAUNCH. All Rights Reserved.</p>
-      <div class="social-icons">
-        <i class="bx bxl-facebook"></i>
-        <i class="bx bxl-twitter"></i>
-        <i class="bx bxl-linkedin"></i>
-        <i class="bx bxl-instagram"></i>
+      <div class="footer-content">
+        <!-- Left: Logo & Rights -->
+        <div class="footer-left">
+          <h2 class="footer-logo">WEBLAUNCH</h2>
+          <p>© 2025 WEBLAUNCH. All Rights Reserved.</p>
+        </div>
+
+        <!-- Middle: Contact -->
+        <div class="footer-middle">
+          <h3>Contact Us</h3>
+          <ul>
+            <li><i class="bx bx-envelope"></i> <a href="mailto:support@weblaunch.com">support@weblaunch.com</a></li>
+            <li><i class="bx bx-phone"></i> <a href="tel:+27123456789">+27 12 345 6789</a></li>
+            <li><i class="bx bx-map"></i> 123 Tech Street, Cape Town, South Africa</li>
+          </ul>
+        </div>
+
+        <!-- Right: Socials -->
+        <div class="footer-right">
+          <h3>Follow Us</h3>
+          <div class="social-icons">
+            <a href="#"><i class="bx bxl-twitter"></i></a>
+            <a href="#"><i class="bx bxl-linkedin"></i></a>
+            <a href="https://www.instagram.com/weblaunch_inc?utm_source=qr" target="_blank"><i class="bx bxl-instagram"></i></a>
+          </div>
+        </div>
       </div>
     </footer>
   </section>
@@ -163,7 +183,7 @@ export default {
 
         this.successMessage = 'Your order has been submitted successfully!';
         this.requirements = '';
-        
+
         // Close modal after 2 seconds
         setTimeout(() => {
           const modal = bootstrap.Modal.getInstance(document.getElementById('packageForm'));
@@ -183,11 +203,14 @@ export default {
 </script>
 
 <style scoped>
+h2 {
+  padding: 1.5rem;
+}
+
 .PriceList {
   background-color: #000;
   color: #fff;
   min-height: 100vh;
-  padding: 4rem 1rem;
   font-family: "Segoe UI", sans-serif;
   display: flex;
   flex-direction: column;
@@ -218,7 +241,7 @@ export default {
 
 .package-card:hover {
   transform: translateY(-5px);
-  border-color: orange;
+  box-shadow: 0 12px 35px rgba(255, 165, 0, 0.25);
 }
 
 .package-header {
@@ -275,22 +298,77 @@ export default {
 }
 
 .landing-footer {
-  text-align: center;
-  padding: 1rem;
-  margin-top: 2rem;
-  border-top: 1px solid orange;
-  flex-shrink: 0;
+  background: #111;
+  padding: 3rem 2rem;
+  border-top: 2px solid orange;
+  color: #ccc;
+  font-size: 0.95rem;
 }
 
-.social-icons {
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  text-align: center;
+}
+
+.footer-left {
+  text-align: center;
+}
+
+.footer-logo {
+  color: orange;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.footer-middle h3,
+.footer-right h3 {
+  color: orange;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.footer-middle ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-middle li {
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.footer-middle a {
+  color: #ccc;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.footer-middle a:hover {
+  color: orange;
+}
+
+.footer-right .social-icons {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin-top: 0.5rem;
 }
 
-.social-icons i {
-  font-size: 1.2rem;
+.footer-right .social-icons a {
   color: orange;
+  font-size: 1.5rem;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.footer-right .social-icons a:hover {
+  transform: scale(1.2);
+  color: #fff;
 }
 </style>

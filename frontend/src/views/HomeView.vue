@@ -129,15 +129,18 @@ body {
   background-color: #f8f9fa;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
+
 .card {
   border-radius: 10px;
 }
+
 .chart-card {
   min-height: 340px;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
+
 .chart-card canvas {
   flex: 1 1 auto;
   max-height: 220px;

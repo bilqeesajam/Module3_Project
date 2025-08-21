@@ -1,5 +1,5 @@
 <template>
-  <UserSidebar/>
+  <UserSidebar />
   <div class="payments-container">
     <div class="payments-card">
       <h2>Payments</h2>
@@ -28,7 +28,7 @@
         <div v-if="paymentResult" class="result-box">
           <p v-if="paymentResult.success" class="success">{{ paymentResult.message }}</p>
           <p v-if="paymentResult.outstanding_balance !== undefined" class="balance">
-            Outstanding Balance: 
+            Outstanding Balance:
             <span v-if="paymentResult.outstanding_balance > 0">R{{ paymentResult.outstanding_balance }}</span>
             <span v-else>Nothing to pay off</span>
           </p>
@@ -68,6 +68,38 @@
       </div>
     </div>
   </div>
+
+  <footer class="landing-footer">
+    <div class="footer-content">
+      <!-- Left: Logo & Rights -->
+      <div class="footer-left">
+        <h2 class="footer-logo">WEBLAUNCH</h2>
+        <p>© 2025 WEBLAUNCH. All Rights Reserved.</p>
+      </div>
+
+      <!-- Middle: Contact -->
+      <div class="footer-middle">
+        <h3>Contact Us</h3>
+        <ul>
+          <li><i class="bx bx-envelope"></i> <a href="mailto:support@weblaunch.com">support@weblaunch.com</a></li>
+          <li><i class="bx bx-phone"></i> <a href="tel:+27123456789">+27 12 345 6789</a></li>
+          <li><i class="bx bx-map"></i> 123 Tech Street, Cape Town, South Africa</li>
+        </ul>
+      </div>
+
+      <!-- Right: Socials -->
+      <div class="footer-right">
+        <h3>Follow Us</h3>
+        <div class="social-icons">
+          <a href="#"><i class="bx bxl-twitter"></i></a>
+          <a href="#"><i class="bx bxl-linkedin"></i></a>
+          <a href="https://www.instagram.com/weblaunch_inc?utm_source=qr" target="_blank"><i
+              class="bx bxl-instagram"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
 </template>
 
 <script>
@@ -155,7 +187,8 @@ export default {
   margin-bottom: 2rem;
 }
 
-h2, h4 {
+h2,
+h4 {
   color: orange;
   margin-bottom: 1rem;
 }
@@ -179,7 +212,8 @@ label {
   margin-bottom: 0.3rem;
 }
 
-input, select {
+input,
+select {
   width: 100%;
   padding: 0.6rem;
   border-radius: 8px;
@@ -242,7 +276,8 @@ input::placeholder {
   background: #111;
 }
 
-.history-table th, .history-table td {
+.history-table th,
+.history-table td {
   border: 1px solid #333;
   padding: 0.7rem;
   text-align: center;
@@ -254,9 +289,20 @@ input::placeholder {
   color: #fff;
 }
 
-.completed { color: #28a745; font-weight: bold; }
-.pending { color: #ffc107; font-weight: bold; }
-.failed { color: #dc3545; font-weight: bold; }
+.completed {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.pending {
+  color: #ffc107;
+  font-weight: bold;
+}
+
+.failed {
+  color: #dc3545;
+  font-weight: bold;
+}
 
 .empty-text {
   color: #aaa;
@@ -264,8 +310,92 @@ input::placeholder {
   margin-top: 0.5rem;
 }
 
+.landing-footer {
+  background: #111;
+  padding: 3rem 2rem;
+  border-top: 2px solid orange;
+  color: #ccc;
+  font-size: 0.95rem;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  text-align: center;
+}
+
+.footer-left {
+  text-align: center;
+}
+
+.footer-logo {
+  color: orange;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.footer-middle h3,
+.footer-right h3 {
+  color: orange;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.footer-middle ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-middle li {
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.footer-middle a {
+  color: #ccc;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.footer-middle a:hover {
+  color: orange;
+}
+
+.footer-right .social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.footer-right .social-icons a {
+  color: orange;
+  font-size: 1.5rem;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.footer-right .social-icons a:hover {
+  transform: scale(1.2);
+  color: #fff;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
+  .footer-content {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .footer-middle li {
+    justify-content: center;
+  }
+
   .payment-form {
     flex-direction: column;
   }
@@ -284,11 +414,13 @@ input::placeholder {
     padding: 1rem;
   }
 
-  h2, h4 {
+  h2,
+  h4 {
     font-size: 1.2rem;
   }
 
-  .history-table th, .history-table td {
+  .history-table th,
+  .history-table td {
     padding: 0.5rem;
   }
 }

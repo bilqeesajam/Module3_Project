@@ -3,27 +3,29 @@
     <div class="login-card split">
       <div class="left-side">
         <div class="heading">
-          <h2>Admin</h2>
+          <h2>Users</h2>
           <form @submit.prevent="handleLogin">
             <div class="user">
               <label for="username">Username</label>
               <input type="text" id="username" name="username" v-model="username" required>
+              <div class="register"></div>
             </div>
             <div class="password">
               <label for="password">Password</label>
               <input type="password" id="password" name="password" v-model="password" required>
+              <div class="forgot"></div>
             </div>
             <button type="submit">Login</button>
           </form>
-           <p v-if="error" class="text-danger mt-3 text-center">{{ error }}</p>
+          <p v-if="error" class="text-danger mt-3 text-center">{{ error }}</p>
         </div>
       </div>
       <div class="right-side">
-        <a href="/users-login">User</a>
-        <br>
-        <a id="forgot" href="/forgot">Forgot Password?</a>
+        <a href="/">Admin</a>
         <br>
         <a href="/signup">Register?</a>
+        <br>
+        <a id="forgot" href="/forgot">Forgot Password?</a>
       </div>
     </div>
   </div>
@@ -31,7 +33,7 @@
 
 <script>
 export default {
-  name: "LoginComp",
+  name: "LearnersComp",
   data() {
     return {
       username: "",
@@ -50,22 +52,22 @@ export default {
           body: JSON.stringify({
             username: this.username,
             password: this.password,
-            role: "admin"
+            role: "learner"
           })
         });
 
         const result = await res.json();
 
         if (res.ok && result.success) {
-          console.log("Admin login successful!");
+          console.log("Learner login successful!");
           localStorage.setItem('token', result.token);
-          this.$router.push("/home");
+          this.$router.push("/homeTwo");
         } else {
-          console.warn("Admin login failed:", result.message);
-          this.error = result.message || "Admin access only";
+          console.warn("Learner login failed:", result.message);
+          this.error = result.message || "Learner access only";
         }
       } catch (error) {
-        console.error("Admin login error:", error);
+        console.error("Learner login error:", error);
         this.error = "Error logging in. Please try again.";
       }
     }
@@ -148,14 +150,6 @@ a:hover {
   margin-bottom: 2rem;
 }
 
-.Admin {
-  color: orange;
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
-  display: block;
-  text-align: center;
-}
-
 input {
   width: 100%;
   padding: 10px;
@@ -193,6 +187,7 @@ button:hover {
   font-weight: bold;
 }
 
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .login-card.split {
     flex-direction: column;

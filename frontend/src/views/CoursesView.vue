@@ -1,5 +1,5 @@
 <template>
-  <UserSidebar/>
+  <UserSidebar />
   <div class="Courses">
     <div class="banner">
       <div class="banner-content">
@@ -47,14 +47,36 @@
     </div>
 
     <footer class="landing-footer">
-      <p>© 2025 WEBLAUNCH. All Rights Reserved.</p>
-      <div class="social-icons">
-        <i class="bx bxl-facebook"></i>
-        <i class="bx bxl-twitter"></i>
-        <i class="bx bxl-linkedin"></i>
-        <i class="bx bxl-instagram"></i>
+      <div class="footer-content">
+        <!-- Left: Logo & Rights -->
+        <div class="footer-left">
+          <h2 class="footer-logo">WEBLAUNCH</h2>
+          <p>© 2025 WEBLAUNCH. All Rights Reserved.</p>
+        </div>
+
+        <!-- Middle: Contact -->
+        <div class="footer-middle">
+          <h3>Contact Us</h3>
+          <ul>
+            <li><i class="bx bx-envelope"></i> <a href="mailto:support@weblaunch.com">support@weblaunch.com</a></li>
+            <li><i class="bx bx-phone"></i> <a href="tel:+27123456789">+27 12 345 6789</a></li>
+            <li><i class="bx bx-map"></i> 123 Tech Street, Cape Town, South Africa</li>
+          </ul>
+        </div>
+
+        <!-- Right: Socials -->
+        <div class="footer-right">
+          <h3>Follow Us</h3>
+          <div class="social-icons">
+            <a href="#"><i class="bx bxl-twitter"></i></a>
+            <a href="#"><i class="bx bxl-linkedin"></i></a>
+            <a href="https://www.instagram.com/weblaunch_inc?utm_source=qr" target="_blank"><i
+                class="bx bxl-instagram"></i></a>
+          </div>
+        </div>
       </div>
     </footer>
+
   </div>
 </template>
 
@@ -230,6 +252,7 @@ export default {
 
 .course-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 12px 35px rgba(255, 165, 0, 0.25);
 }
 
 .course-img-container {
@@ -300,43 +323,89 @@ export default {
 
 /* Footer */
 .landing-footer {
-  text-align: center;
-  padding: 2rem;
-  margin-top: 3rem;
+  background: #111;
+  padding: 3rem 2rem;
   border-top: 2px solid orange;
+  color: #ccc;
+  font-size: 0.95rem;
 }
 
-.social-icons {
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  text-align: center;
+}
+
+.footer-left {
+  text-align: center;
+}
+
+.footer-logo {
+  color: orange;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.footer-middle h3,
+.footer-right h3 {
+  color: orange;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.footer-middle ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-middle li {
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.footer-middle a {
+  color: #ccc;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.footer-middle a:hover {
+  color: orange;
+}
+
+.footer-right .social-icons {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin-top: 1rem;
 }
 
-.social-icons i {
-  font-size: 1.5rem;
+.footer-right .social-icons a {
   color: orange;
+  font-size: 1.5rem;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.footer-right .social-icons a:hover {
+  transform: scale(1.2);
+  color: #fff;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .banner h1 {
-    font-size: 2rem;
-  }
-
-  .banner-stats {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .courses-grid {
+  .footer-content {
     grid-template-columns: 1fr;
+    text-align: center;
   }
-}
 
-.enroll-btn:disabled {
-  background: #444;
-  color: #aaa;
-  cursor: not-allowed;
+  .footer-middle li {
+    justify-content: center;
+  }
 }
 </style>

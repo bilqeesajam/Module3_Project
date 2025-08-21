@@ -1,22 +1,33 @@
 <template>
-  <div class="main-content">
+  <div :class="{'main-content': !isAdminLogin && !isUserLogin && !isForgotPassword && !isSignup}">
     <router-view />
   </div>
 </template>
+
 <script>
 import 'toastify-js/src/toastify.css';
 
 export default {
+  computed: {
+    isAdminLogin() {
+      return this.$route.path === '/';
+    },
+    isUserLogin() {
+      return this.$route.path === '/users-login';
+    },
+    isForgotPassword() {
+      return this.$route.path === '/forgot';
+    },
+    isSignup() {
+      return this.$route.path === '/signup';
+    }
+  },
   mounted() {
     this.$store.dispatch('getUsers')
-
   },
-
-  computed: {
-
-  },
-}; 
+};
 </script>
+
 <style>
 body {
   background-color: #112B4A;

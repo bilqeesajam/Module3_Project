@@ -12,7 +12,14 @@
 export default {
   methods: {
     handleLogout() {
-      console.log('Logging out...');
+      localStorage.removeItem('token');
+
+      this.$router.replace('/');
+
+      window.history.pushState(null, null, '/');
+      window.addEventListener('popstate', function () {
+        window.location.replace('/'); 
+      });
     }
   }
 }
