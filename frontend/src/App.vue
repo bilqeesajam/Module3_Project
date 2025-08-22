@@ -1,5 +1,5 @@
 <template>
-  <div :class="{'main-content': !isAdminLogin && !isUserLogin && !isForgotPassword && !isSignup}">
+  <div :class="{'main-content': !isAdminLogin && !isUserLogin && !isForgotPassword && !isSignup && !isTerms}">
     <router-view />
   </div>
 </template>
@@ -20,6 +20,9 @@ export default {
     },
     isSignup() {
       return this.$route.path === '/signup';
+    },
+    isTerms() {
+      return this.$route.path === '/terms-and-conditions';
     }
   },
   mounted() {

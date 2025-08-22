@@ -23,7 +23,7 @@
       <div class="right-side">
         <a href="/">Admin</a>
         <br>
-        <a href="/signup">Register?</a>
+        <a href="/terms-and-conditions">Register?</a>
         <br>
         <a id="forgot" href="/forgot">Forgot Password?</a>
       </div>

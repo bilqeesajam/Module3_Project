@@ -4,7 +4,7 @@
     <h1 class="text-center mb-2" style="color: #205781; font-weight: 700;">Hello Admin</h1>
 
     <!-- Stats Cards -->
-    <div class="row mb-5">
+    <div class="row mb-5 justify-content-center">
       <div class="col-md-3" v-for="stat in stats" :key="stat.title">
         <div class="card shadow-sm text-center py-4" style="border-left: 5px solid #FF851B;">
           <h5 style="color: #001F3F;">{{ stat.title }}</h5>
@@ -58,7 +58,6 @@ onMounted(async () => {
       { title: "Active Students", value: statsRes.data.activeStudents },
       { title: "Total Orders", value: statsRes.data.totalOrders },
       { title: "Completed Orders", value: statsRes.data.completedOrders },
-      { title: "Total Revenue (ZAR)", value: `R ${Number(statsRes.data.totalRevenue).toLocaleString()}` }
     ];
 
     // Fetch charts

@@ -23,7 +23,7 @@
         <br>
         <a id="forgot" href="/forgot">Forgot Password?</a>
         <br>
-        <a href="/signup">Register?</a>
+        <a href="/terms-and-conditions">Register?</a>
       </div>
     </div>
   </div>

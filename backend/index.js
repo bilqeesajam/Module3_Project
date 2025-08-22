@@ -25,6 +25,7 @@ const pool = mysql2.createPool({
 app.use(cors());
 app.use(express.json());
 
+// ---------- Admin Dashboard ----------
 // Dashboard stats route
 app.get('/dashboard/stats', async (req, res) => {
   try {
@@ -44,12 +45,7 @@ app.get('/dashboard/stats', async (req, res) => {
       FROM orders WHERE status = 'completed'
     `);
 
-    const [[{ totalRevenue }]] = await pool.query(`
-      SELECT SUM(amount_paid) AS totalRevenue 
-      FROM payments WHERE status = 'completed'
-    `);
-
-    res.json({ activeStudents, totalOrders, completedOrders, totalRevenue });
+    res.json({ activeStudents, totalOrders, completedOrders });
   } catch (err) {
     console.error('Error fetching stats:', err);
     res.status(500).json({ error: 'Server error' });
@@ -79,13 +75,18 @@ app.get('/dashboard/orders-status', async (req, res) => {
 
 // Revenue by Package
 app.get('/dashboard/revenue-by-package', async (req, res) => {
-  const [rows] = await pool.query(`
-    SELECT package_type, SUM(price) AS total_revenue
-    FROM orders
-    WHERE status = 'completed'
-    GROUP BY package_type
-  `);
-  res.json(rows);
+  try {
+    const [rows] = await pool.query(`
+      SELECT package_type, COALESCE(SUM(price),0) AS total_revenue
+      FROM orders
+      WHERE status = 'completed'
+      GROUP BY package_type
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error('Error fetching revenue by package:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 // Top 5 Courses
@@ -101,7 +102,7 @@ app.get('/dashboard/top-courses', async (req, res) => {
   res.json(rows);
 });
 
-// Login route - JWT
+// ---------- Login Route using JWT ----------
 app.post('/password-verification', async (req, res) => {
   const { username, password, role } = req.body;
 
@@ -149,18 +150,8 @@ app.post('/password-verification', async (req, res) => {
   }
 });
 
-// GET all users
-app.get('/users', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT * FROM users');
-    res.json(rows);
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Database error' });
-  }
-});
-
-// POST new user
+// ---------- Sign up ----------
+// Create a new user
 app.post('/users', async (req, res) => {
   const { username, email, phone_number, password } = req.body;
 
@@ -193,6 +184,7 @@ app.post('/users', async (req, res) => {
   }
 });
 
+// ---------- In progress: edit profile ----------
 // PUT update user by id
 app.put('/users/:id', async (req, res) => {
   const id = req.params.id;
@@ -223,21 +215,7 @@ app.put('/users/:id', async (req, res) => {
   }
 });
 
-// DELETE user by id
-app.delete('/users/:id', async (req, res) => {
-  const id = req.params.id;
-  try {
-    const [result] = await pool.query('DELETE FROM users WHERE user_id = ?', [id]);
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    res.json({ message: 'User deleted' });
-  } catch (error) {
-    console.error('Error deleting user:', error);
-    res.status(500).json({ error: 'Failed to delete user' });
-  }
-});
-
+// ---------- Reset password: does not send an actual email ----------
 // POST Handle forgot password by sending a reset link
 app.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
@@ -260,7 +238,7 @@ app.post('/forgot-password', async (req, res) => {
   }
 });
 
-// Get user profile
+// ---------- User Profile ----------
 app.get('/user/profile', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
 
@@ -336,6 +314,8 @@ app.get('/user/profile', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// ---------- Display Available Courses ----------
 app.get('/courses', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM courses');
@@ -346,6 +326,7 @@ app.get('/courses', async (req, res) => {
   }
 });
 
+// ---------- Enroll user in course ----------
 app.post('/enrollments', verifyToken(), async (req, res) => {
   const { course_id } = req.body;
   const userId = req.user.user_id;
@@ -358,7 +339,7 @@ app.post('/enrollments', verifyToken(), async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    // 1. Get course price
+    // Get course price
     const [course] = await connection.query(
       'SELECT price FROM courses WHERE course_id = ?',
       [course_id]
@@ -368,7 +349,7 @@ app.post('/enrollments', verifyToken(), async (req, res) => {
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    // 2. Check existing enrollment
+    // Check existing enrollment
     const [existing] = await connection.query(
       'SELECT 1 FROM enrollments WHERE user_id = ? AND course_id = ?',
       [userId, course_id]
@@ -378,7 +359,7 @@ app.post('/enrollments', verifyToken(), async (req, res) => {
       return res.status(400).json({ message: 'Already enrolled' });
     }
 
-    // 3. Find or create payment record
+    // Find or create payment record
     const [payment] = await connection.query(
       `SELECT payment_id FROM payments WHERE user_id = ? FOR UPDATE`,
       [userId]
@@ -409,7 +390,7 @@ app.post('/enrollments', verifyToken(), async (req, res) => {
       paymentId = result.insertId;
     }
 
-    // 4. Create enrollment linked to payment
+    // Create enrollment linked to payment
     await connection.query(
       `INSERT INTO enrollments 
        (user_id, course_id, status, enrolled_at, user_payment_id) 
@@ -513,7 +494,7 @@ app.post('/orders', verifyToken(), async (req, res) => {
       paymentId = paymentResult.insertId;
     }
 
-    // 3. Update the order with the payment_id
+    // Update the order with the payment_id
     await connection.query(
       'UPDATE orders SET user_payment_id = ? WHERE order_id = ?',
       [paymentId, orderResult.insertId]
@@ -541,11 +522,9 @@ app.post('/orders', verifyToken(), async (req, res) => {
   }
 });
 
-// PAYMENT ENDPOINTS
+// ---------- Payment endpoints for simulated payments ----------
 
-
-// Process a payment (add funds to account)
-
+// Add funds to account
 app.post('/payments', verifyToken(), async (req, res) => {
   const { amount_paid, payment_method, reference } = req.body;
   const userId = req.user.user_id;
@@ -558,7 +537,7 @@ app.post('/payments', verifyToken(), async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    // 1. Get current payment record
+    // Get current payment record
     const [paymentRows] = await connection.query(
       'SELECT * FROM payments WHERE user_id = ? FOR UPDATE',
       [userId]
@@ -573,7 +552,7 @@ app.post('/payments', verifyToken(), async (req, res) => {
     const newAmountPaid = parseFloat(paymentRows[0].amount_paid) + parseFloat(amount_paid);
     const totalAmount = parseFloat(paymentRows[0].total_amount);
 
-    // 2. Update payment record (without directly setting outstanding_balance)
+    // Update payment record (without directly setting outstanding_balance)
     await connection.query(
       `UPDATE payments 
        SET amount_paid = ?, 
@@ -586,7 +565,7 @@ app.post('/payments', verifyToken(), async (req, res) => {
       [newAmountPaid, payment_method, newAmountPaid, paymentId]
     );
 
-    // 3. Get the updated record with calculated outstanding_balance
+    // Get the updated record with calculated outstanding_balance
     const [updatedPayment] = await connection.query(
       'SELECT outstanding_balance FROM payments WHERE payment_id = ?',
       [paymentId]
@@ -621,7 +600,7 @@ app.post('/payments/complete', verifyToken(), async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    // 1. Get current payment record with proper numeric casting
+    // Get current payment record with proper numeric casting
     const [paymentRows] = await connection.query(
       'SELECT payment_id, total_amount, amount_paid, status FROM payments WHERE user_id = ? FOR UPDATE',
       [userId]
@@ -645,20 +624,20 @@ app.post('/payments/complete', verifyToken(), async (req, res) => {
 
     const payment = paymentRows[0];
     
-    // 2. Convert amounts to numbers to ensure proper addition
+    // Convert amounts to numbers to ensure proper addition
     const currentAmountPaid = parseFloat(payment.amount_paid);
     const paymentAmount = parseFloat(amount);
     const newAmountPaid = currentAmountPaid + paymentAmount;
     const totalAmount = parseFloat(payment.total_amount);
     const newStatus = newAmountPaid >= totalAmount ? 'completed' : 'pending';
 
-    // 3. Update payment record
+    // Update payment record
     await connection.query(
       'UPDATE payments SET amount_paid = ?, payment_method = ?, status = ? WHERE payment_id = ?',
       [newAmountPaid, method, newStatus, payment.payment_id]
     );
 
-    // 4. Update linked entities if specified
+    // Update linked entities if specified
     if (orderId) {
       await connection.query(
         'UPDATE orders SET status = "completed" WHERE order_id = ? AND user_id = ?',
@@ -675,7 +654,7 @@ app.post('/payments/complete', verifyToken(), async (req, res) => {
 
     await connection.commit();
 
-    // 5. Get the updated payment record to return accurate outstanding balance
+    // Get the updated payment record to return accurate outstanding balance
     const [updatedPayment] = await connection.query(
       'SELECT total_amount - amount_paid AS outstanding_balance FROM payments WHERE payment_id = ?',
       [payment.payment_id]
@@ -696,9 +675,9 @@ app.post('/payments/complete', verifyToken(), async (req, res) => {
     connection.release();
   }
 });
-/**
- * Get payment history for a user
- */
+
+// Payment history
+
 app.get('/payments/history', verifyToken(), async (req, res) => {
   const userId = req.user.user_id;
   try {

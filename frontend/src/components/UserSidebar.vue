@@ -1,7 +1,7 @@
 <template>
   <nav class="sidebar">
     <ul>
-      <li><router-link to="/homeTwo">Home Two</router-link></li>
+      <li><router-link to="/homeTwo">Home</router-link></li>
       <li><router-link to="/courses">Learn how to code</router-link></li>
       <li><router-link to="/pricelist">Packages we offer</router-link></li>
       <li><router-link to="/payments">Payments</router-link></li>
@@ -16,9 +16,7 @@ export default {
   methods: {
     handleLogout() {
       localStorage.removeItem('token');
-
       this.$router.replace('/users-login');
-
       window.history.pushState(null, null, '/users-login');
       window.addEventListener('popstate', function () {
         window.location.replace('/users-login'); 

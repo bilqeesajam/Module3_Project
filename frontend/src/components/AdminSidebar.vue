@@ -13,12 +13,10 @@ export default {
   methods: {
     handleLogout() {
       localStorage.removeItem('token');
-
       this.$router.replace('/');
-
       window.history.pushState(null, null, '/');
       window.addEventListener('popstate', function () {
-        window.location.replace('/'); 
+        window.location.replace('/');
       });
     }
   }

@@ -10,6 +10,7 @@ import PriceListView from '@/views/PriceListView.vue'
 import UsersProfileView from '@/views/UsersProfileView.vue'
 import PaymentsComp from '@/components/PaymentsComp.vue'
 import UsersLoginView from '@/views/UsersLoginView.vue'
+import TermsAndConditionsView from '@/views/TermsAndConditionsView.vue'
 
 const routes = [
   {
@@ -66,6 +67,11 @@ const routes = [
     path: '/payments',
     name: 'payments',
     component: PaymentsComp
+  },
+  {
+    path: '/terms-and-conditions',
+    name: 'terms and conditions',
+    component: TermsAndConditionsView
   }
 ]
 

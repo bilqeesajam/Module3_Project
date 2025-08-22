@@ -98,10 +98,8 @@ function scrollToFeatures() {
   left: 0;
   width: 100%;
   height: 30%;
-  /* how tall the fade is */
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, #0000004e 75%, #000000c3 85%, #000000 100%);
   pointer-events: none;
-  /* So it doesn't block clicks */
   z-index: 0;
 }
 
@@ -112,9 +110,7 @@ function scrollToFeatures() {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Makes video fill and crop properly */
   z-index: -1;
-  /* Sends it behind the text */
 }
 
 .hero h1 {
@@ -162,7 +158,7 @@ function scrollToFeatures() {
   background: whitesmoke;
   padding: 2rem;
   border-radius: 10px;
-  border: 3px solid orange;
+  /* border: 3px solid orange; */
   transition: transform 0.3s, background 0.3s, color 0.3s;
   box-shadow: 0 4px 16px rgba(32, 87, 129, 0.08);
   display: flex;
@@ -177,7 +173,7 @@ function scrollToFeatures() {
 
 .feature-card:hover {
   transform: translateY(-5px) scale(1.03);
-  background: orange;
+  /* background: rgb(244, 215, 160); */
   color: navy;
 }
 
