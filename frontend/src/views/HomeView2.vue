@@ -173,12 +173,12 @@ function scrollToFeatures() {
 
 .feature-card:hover {
   transform: translateY(-5px) scale(1.03);
-  /* background: rgb(244, 215, 160); */
+  box-shadow: 0 12px 35px rgba(255, 165, 0, 0.25);
   color: navy;
 }
 
 .feature-card:hover h2 {
-  color: navy;
+  color: rgb(0, 0, 0);
 }
 
 .feature-btn {
